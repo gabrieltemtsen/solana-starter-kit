@@ -8,22 +8,28 @@ import { Input } from '@/components/form/input'
 import { SubmitButton } from '@/components/form/submit-button'
 import { useCreateProfile } from '@/components/profile/hooks/use-create-profile'
 import { useGetIdentities } from '@/components/profile/hooks/use-get-identities'
-import { IIdentity, IProfileList } from '@/models/profile.models'
+import { IProfileList } from '@/models/profile.models'
 import { cn } from '@/utils/utils'
+import { usePrivy } from '@privy-io/react-auth'
 import { User } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 
 interface Props {
   setCreateProfileDialog: (isOpen: boolean) => void
+  setIsProfileCreated: (val: boolean) => void
+  setProfileUsername: (val: string) => void
 }
 
-export function CreateProfile({ setCreateProfileDialog }: Props) {
-  const { walletAddress, loadingMainUsername, walletDisconnect } =
-    useCurrentWallet()
+export function CreateProfile({
+  setCreateProfileDialog,
+  setIsProfileCreated,
+  setProfileUsername,
+}: Props) {
+  const { walletAddress, loadingMainUsername } = useCurrentWallet()
+  const { logout } = usePrivy()
 
   const [username, setUsername] = useState('')
-
   const [selectProfile, setSelectProfile] = useState<IProfileList | null>(null)
 
   const {
@@ -41,6 +47,8 @@ export function CreateProfile({ setCreateProfileDialog }: Props) {
     e.preventDefault()
     if (walletAddress && username) {
       await createProfile({ username, walletAddress })
+      setIsProfileCreated(true)
+      setProfileUsername(username)
       setCreateProfileDialog(false)
     }
   }
@@ -52,17 +60,20 @@ export function CreateProfile({ setCreateProfileDialog }: Props) {
     setUsername(validValue)
   }
 
-  const handleClick = async (elem: IIdentity) => {
+  const handleClick = async (elem: IProfileList) => {
     if (!walletAddress) {
       return
     }
 
     await createProfile({
       username: elem.profile.username,
-      walletAddress: elem.wallet.address,
+      walletAddress: walletAddress,
+      bio: elem.profile.bio,
+      image: elem.profile.image,
     })
 
     setCreateProfileDialog(false)
+    window.location.reload()
   }
 
   if (loadingMainUsername && profilesLoading) {
@@ -98,9 +109,11 @@ export function CreateProfile({ setCreateProfileDialog }: Props) {
         <div className="bg-foreground h-[1px] w-full my-4" />
         <div className="flex flex-col space-y-4 items-center w-full">
           <div className="w-full">
-            {!!identities?.profiles?.length ? (
+            {!!identities?.identities?.length ? (
               <div className="w-full h-[200px] overflow-auto">
-                {identities?.profiles?.map((entry, index) => (
+                {
+                identities?.identities?.map((profiles) => (
+                profiles?.profiles?.map((entry, index) => (
                   <Button
                     key={index}
                     disabled={profilesLoading}
@@ -136,11 +149,11 @@ export function CreateProfile({ setCreateProfileDialog }: Props) {
                         </div>
                         <div className="w-2/3 flex flex-col items-start text-left">
                           <h4 className="text-md font-bold truncate w-full">
-                            {entry?.profile?.username ?? 'No username'}
+                            {entry.profile?.username ?? 'No username'}
                           </h4>
-                          {entry?.profile?.bio && (
+                          {entry.profile?.bio && (
                             <p className="text-xs text-muted-foreground truncate w-full">
-                              {entry?.profile?.bio}
+                              {entry.profile?.bio}
                             </p>
                           )}
                           {entry?.namespace?.faviconURL && (
@@ -159,12 +172,22 @@ export function CreateProfile({ setCreateProfileDialog }: Props) {
                       </div>
                     </div>
                   </Button>
-                ))}
+                ))
+              ))}
               </div>
             ) : (
               <p className="text-xs text-center">
-                We could not find any profiles on Tapestry.
+                 {profilesLoading &&( <>
+                  Getting profiles from Tapestry.. Please wait
+                <br />
+                </>
+              )}
+
+                {!profilesLoading &&( <>
+                  We could not find any profiles on Tapestry.
                 <br /> Create one to get started!
+                </>
+              )}
               </p>
             )}
           </div>
@@ -172,20 +195,20 @@ export function CreateProfile({ setCreateProfileDialog }: Props) {
           <Button
             className="w-full justify-center"
             variant="secondary"
-            disabled={selectProfile === null}
+            disabled={profilesLoading || selectProfile === null}
             onClick={() => {
               if (selectProfile) {
                 handleClick(selectProfile)
               }
             }}
           >
-            Import profile
+          {creationLoading ? 'Importing...' : 'Import profile'}
           </Button>
           <Button
             className="w-full text-xs underline justify-center"
             variant="ghost"
             onClick={() => {
-              walletDisconnect()
+              logout()
               setCreateProfileDialog(false)
             }}
           >

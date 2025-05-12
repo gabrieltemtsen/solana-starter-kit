@@ -5,6 +5,8 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData()
   const username = formData.get('username')?.toString()
   const ownerWalletAddress = formData.get('ownerWalletAddress')?.toString()
+  const bio = formData.get('bio')?.toString()
+  const image = formData.get('image')?.toString()
 
   if (!username || !ownerWalletAddress) {
     return NextResponse.json(
@@ -20,6 +22,8 @@ export async function POST(req: NextRequest) {
       {
         walletAddress: ownerWalletAddress,
         username,
+        bio,
+        image,
         blockchain: 'SOLANA',
       },
     )

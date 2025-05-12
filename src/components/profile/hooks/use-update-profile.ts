@@ -39,7 +39,7 @@ export const useUpdateProfileInfo = ({ username }: Props) => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [username])
 
   return { updateProfile, loading, error, success }
 }

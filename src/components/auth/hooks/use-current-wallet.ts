@@ -1,37 +1,30 @@
 'use client'
 
 import { useGetProfiles } from '@/components/auth/hooks/use-get-profiles'
-import {
-  useUnifiedWallet,
-  useUnifiedWalletContext,
-} from '@jup-ag/wallet-adapter'
+import { usePrivy } from '@privy-io/react-auth'
+import { useEffect, useState } from 'react'
 
 export function useCurrentWallet() {
-  const { publicKey, disconnect, wallet, signMessage } = useUnifiedWallet()
-
-  const { setShowModal } = useUnifiedWalletContext()
-
-  const walletAddress = publicKey?.toBase58() || null
+  const [walletAddress, setWalletAddress] = useState<string>('')
+  const { user, authenticated, ready } = usePrivy()
 
   const { profiles, loading } = useGetProfiles({
     walletAddress: walletAddress || '',
   })
 
-  function openWalletConnectModal() {
-    setShowModal(true)
-  }
+  useEffect(() => {
+    if (authenticated && ready && user && user.wallet) {
+      setWalletAddress(user.wallet?.address)
+    } else {
+      setWalletAddress('')
+    }
+  }, [user, authenticated, ready])
 
   return {
-    walletIsConnected: !!walletAddress,
-    wallet,
-    publicKey,
-    walletName: wallet?.adapter.name,
-    walletIcon: wallet?.adapter.icon,
+    walletIsConnected: !(walletAddress === ''),
     walletAddress,
     mainUsername: profiles?.[0]?.profile?.username,
     loadingMainUsername: loading,
-    openWalletConnectModal,
-    signMessage,
-    walletDisconnect: disconnect,
+    setWalletAddress,
   }
 }

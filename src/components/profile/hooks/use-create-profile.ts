@@ -8,9 +8,11 @@ export const useCreateProfile = () => {
   interface Props {
     username: string
     walletAddress: string
+    bio?: string | null
+    image?: string | null
   }
 
-  const createProfile = async ({ username, walletAddress }: Props) => {
+  const createProfile = async ({ username, walletAddress, bio, image }: Props) => {
     setLoading(true)
     setError(null)
 
@@ -18,6 +20,12 @@ export const useCreateProfile = () => {
       const formData = new FormData()
       formData.append('username', username)
       formData.append('ownerWalletAddress', walletAddress)
+      if(bio) {
+        formData.append('bio', bio)
+      }
+      if(image) {
+        formData.append('image', image)
+      }
 
       const res = await fetch('/api/profiles/create', {
         method: 'POST',

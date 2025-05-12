@@ -74,18 +74,17 @@ export interface ISearch {
 }
 
 export interface IIdentitiesResponse {
-  profiles: IIdentity[]
+  identities: IIdentity[]
   page: number
   pageSize: number
   totalCount: number
 }
 
 export interface IIdentity {
-  profile: IProfile
+  profiles: IProfileList[]
   wallet: {
     address: string
   }
-  namespace: INamespace
 }
 
 export interface IWallet {

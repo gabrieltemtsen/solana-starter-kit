@@ -1,12 +1,3 @@
-import { BaseWalletAdapter } from '@jup-ag/wallet-adapter'
-
-export type WalletAdapterWithMutableSupportedTransactionVersions<T> = Omit<
-  T,
-  'supportedTransactionVersions'
-> & {
-  supportedTransactionVersions: BaseWalletAdapter['supportedTransactionVersions']
-}
-
 export const metadata = {
   name: 'tapestry-template',
   title: 'Tapestry protocol template',

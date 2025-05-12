@@ -1,90 +1,54 @@
-# Tapestry Protocol Template
+# Solana Starter Kit
 
-This is a Next.js application that demonstrates key features of the [Tapestry](https://www.usetapestry.dev/) Protocol. Use this as a starting point for integrating social features into your Solana dApp.
+Welcome to the **Solana Starter Kit**! This guide is designed to help you quickly start building blockchain applications on Solana by providing a comprehensive template and clear, step-by-step instructions.
 
-🔑 **Get API Key**: [app.usetapestry.dev](https://app.usetapestry.dev)  
-📚 **API Reference**: [docs.usetapestry.dev/api](https://docs.usetapestry.dev/api)
+## User Journey
 
-## Features
-
-### 1. Profile Management
-
-- Create new profiles with username and wallet address
-- View profile information including follower/following counts
-- List all profiles in the system
-- Get suggested profiles based on wallet address
-
-**API Endpoints Used:**
-
-- `POST /profiles/findOrCreate` - Create new profile
-- `GET /profiles/{username}` - Get profile details
-- `GET /profiles` - List all profiles
-- `GET /profiles/suggested/{walletAddress}` - Get suggested profiles
-
-### 2. Social Connections
-
-- Follow/unfollow other users
-- View followers list
-- View following list
-
-**API Endpoints Used:**
-
-- `POST /followers/add` - Follow a user
-- `POST /followers/remove` - Unfollow a user
-- `GET /profiles/{username}/followers` - Get user's followers
-- `GET /profiles/{username}/following` - Get user's following list
-
-### 3. Comments
-
-- Create comments on content
-- Support for nested comments (replies)
-
-**API Endpoints Used:**
-
-- `POST /comments` - Create new comment
-
-## Getting Started
-
-### 0. Prerequisites
-
-- Node.js 16+
-- Yarn package manager
-- Solana wallet (Phantom, Solflare, etc.)
-
-### 1. Get Your API Key
-
-Before you begin, you'll need to get a Tapestry API key:
-
-1. Visit [app.usetapestry.dev](https://app.usetapestry.dev)
-2. Create an account or sign in
-3. Create a new API key
-4. Copy your API key - you'll need it for the next step
-
-### 2. Environment Setup
-
-Create a `.env.local` file in the root directory:
+### 1. Clone the Repo
+Clone the repository in your preferred code editor to start working with the code locally. Use the following commands:
 
 ```bash
-TAPESTRY_API_KEY=xxx
-TAPESTRY_URL=https://protocol-server.fly.dev/v1
+git https://github.com/Primitives-xyz/solana-starter-kit
+cd solana-starter-kit
 ```
 
-Install the dependencies
+
+### 2. Get API Keys
+At this stage, you need to sign up for API keys from each infrastructure partner required for your project. Use the links below to sign up:
+- **Privy**: Web3 authentication and embedded wallet infrastructure – <a href="https://dashboard.privy.io" target="_blank">Sign up for Privy</a>
+- **Tapestry**: Social graph and onchain identity API – <a href="https://app.usetapestry.dev/" target="_blank">Get Early Access at Tapestry</a>
+- **Zerion**: Blockchain portfolio and wallet data API – <a href="https://zerion-io.typeform.com/to/wTY30GPv" target="_blank">Request a Zerion API Key</a>
+- **0x**: Open source liquidity and trading API – <a href="https://0x.org/docs/api" target="_blank">Explore 0x API docs</a>
+- **Helius**: Real-time Solana RPC platform - <a href="https://dashboard.helius.dev/" target="_blank">Sign up at Helius</a>
+
+
+### 3. Configure Environment
+Create a `.env` file at the project root and paste in your API credentials:
+
+#TODO
+
+### 4. Add Docs to Cursor
+Navigate to Cursor > Cursor Settings > Features > Docs
+
+Add the following docs URLs so Cursor can access them at any time:
+
+- **Privy**: https://docs.privy.io/
+
+- **Tapestry**: https://docs.usetapestry.dev/api
+
+- **Zerion**: https://developers.zerion.io/reference/intro/getting-started
+
+- **0x**: https://0x.org/docs/api
+
+- **Helius**: https://docs.helius.dev/
+
+
+### 5. Install Dependencies and Get Started
+Install dependencies and run the development server to begin coding:
 
 ```bash
-yarn install
-
+npm install
+npm run dev
 ```
 
-## Start the app
-
-```bash
-yarn dev
-
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## Tapestry Endpoints
-
-Tapestry endpoints are defined in the file `tapestry.ts`
+Now you're all set to start coding! Begin by exploring the codebase, and use our documentation to guide your development.
