@@ -6,17 +6,19 @@ import { useEffect, useState } from 'react'
 
 export function useCurrentWallet() {
   const [walletAddress, setWalletAddress] = useState<string>('')
-  const { user } = usePrivy()
+  const { user, authenticated, ready } = usePrivy()
 
   const { profiles, loading } = useGetProfiles({
     walletAddress: walletAddress || '',
   })
 
   useEffect(() => {
-    if (user && user.wallet) {
+    if (authenticated && ready && user && user.wallet) {
       setWalletAddress(user.wallet?.address)
+    } else {
+      setWalletAddress('')
     }
-  }, [user])
+  }, [user, authenticated, ready])
 
   return {
     walletIsConnected: !(walletAddress === ''),

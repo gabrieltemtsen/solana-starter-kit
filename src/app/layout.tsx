@@ -3,6 +3,7 @@ import { PrivyClientProvider } from '@/components/provider/PrivyClientProvider'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { ReactNode } from 'react'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <PrivyClientProvider>
           <Header />
+          <Toaster />
           <div className="max-w-6xl mx-auto pt-12 pb-22">{children}</div>
         </PrivyClientProvider>
       </body>
