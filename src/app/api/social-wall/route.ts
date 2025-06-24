@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const requestingProfileId = searchParams.get('requestingProfileId')
 
-    const response = await fetch(`${process.env.TAPESTRY_API_URL}/comments?targetProfileId=social-wall${requestingProfileId ? `&requestingProfileId=${requestingProfileId}` : ''}&includeReplies=true`, {
+    const response = await fetch(`${process.env.TAPESTRY_API_URL}/comments?${requestingProfileId ? `requestingProfileId=${requestingProfileId}&` : ''}includeReplies=true`, {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.TAPESTRY_API_KEY || '',
@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         profileId,
-        targetProfileId: 'social-wall',
         text,
         commentId, // For replies
       }),

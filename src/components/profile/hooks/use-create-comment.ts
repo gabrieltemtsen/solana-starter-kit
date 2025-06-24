@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react'
 
 interface Props {
   profileId: string
-  targetProfileId: string
+  targetProfileId?: string
   text: string
   commentId?: string
 }

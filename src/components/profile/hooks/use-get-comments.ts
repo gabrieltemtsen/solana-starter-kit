@@ -4,7 +4,7 @@ import { ICommentsResponse } from '@/models/comment.models'
 import { useCallback, useEffect, useState } from 'react'
 
 interface Props {
-  targetProfileId: string
+  targetProfileId?: string
   requestingProfileId?: string
 }
 
@@ -21,9 +21,19 @@ export const useGetComments = ({
     setError(null)
 
     try {
-      let url = `/api/comments?targetProfileId=${targetProfileId}`
+      let url = '/api/comments'
+      const params = new URLSearchParams()
+      
+      if (targetProfileId) {
+        params.append('targetProfileId', targetProfileId)
+      }
       if (requestingProfileId) {
-        url += `&requestingProfileId=${requestingProfileId}`
+        params.append('requestingProfileId', requestingProfileId)
+      }
+
+      const queryString = params.toString()
+      if (queryString) {
+        url += `?${queryString}`
       }
 
       const response = await fetch(url, {
@@ -45,10 +55,8 @@ export const useGetComments = ({
   }, [targetProfileId, requestingProfileId])
 
   useEffect(() => {
-    if (targetProfileId) {
-      fetchComments()
-    }
-  }, [fetchComments, targetProfileId])
+    fetchComments()
+  }, [fetchComments])
 
   return { data, loading, error, refetch: fetchComments }
 }

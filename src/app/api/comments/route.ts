@@ -1,33 +1,45 @@
-import { socialfi } from '@/utils/socialfi'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
-  const targetProfileId = searchParams.get('targetProfileId')
-  const requestingProfileId = searchParams.get('requestingProfileId')
-
+export async function GET(request: NextRequest) {
   try {
-    const response = await socialfi.comments.commentsList({
-      apiKey: process.env.TAPESTRY_API_KEY || '',
-      requestingProfileId: requestingProfileId || '',
-      targetProfileId: targetProfileId || '',
+    const { searchParams } = new URL(request.url)
+    const targetProfileId = searchParams.get('targetProfileId')
+    const requestingProfileId = searchParams.get('requestingProfileId')
+
+    let url = `${process.env.TAPESTRY_API_URL}/comments`
+    const params = new URLSearchParams()
+
+    if (targetProfileId) {
+      params.append('targetProfileId', targetProfileId)
+    }
+    if (requestingProfileId) {
+      params.append('requestingProfileId', requestingProfileId)
+    }
+    params.append('includeReplies', 'true')
+
+    const queryString = params.toString()
+    if (queryString) {
+      url += `?${queryString}`
+    }
+
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.TAPESTRY_API_KEY || '',
+      },
     })
 
-    if (!response) {
+    if (!response.ok) {
       throw new Error('Failed to fetch comments')
     }
 
-    return NextResponse.json(response)
+    const data = await response.json()
+    return NextResponse.json(data)
   } catch (error) {
-    console.error('[Get Comments Error]:', error)
-
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
+    console.error('Error fetching comments:', error)
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
-      { status: 500 },
+      { error: 'Failed to fetch comments' },
+      { status: 500 }
     )
   }
 }
@@ -37,34 +49,54 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { profileId, targetProfileId, text, commentId } = body
 
-    if (!profileId || !targetProfileId || !text) {
+    if (!profileId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 },
+        { error: 'Profile ID is required' },
+        { status: 400 }
       )
     }
 
-    const response = await socialfi.comments.commentsCreate(
-      {
-        apiKey: process.env.TAPESTRY_API_KEY || '',
-      },
-      {
-        profileId,
-        targetProfileId: targetProfileId,
-        text,
-        commentId,
-      },
-    )
+    if (!text) {
+      return NextResponse.json(
+        { error: 'Comment text is required' },
+        { status: 400 }
+      )
+    }
 
-    return NextResponse.json(response)
-  } catch (error) {
-    console.error('[Create Comment Error]:', error)
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : 'Failed to create comment',
+    const payload: any = {
+      profileId,
+      text,
+    }
+
+    if (targetProfileId) {
+      payload.targetProfileId = targetProfileId
+    }
+
+    if (commentId) {
+      payload.commentId = commentId
+    }
+
+    const response = await fetch(`${process.env.TAPESTRY_API_URL}/comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.TAPESTRY_API_KEY || '',
       },
-      { status: 500 },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to create comment')
+    }
+
+    const data = await response.json()
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('Error creating comment:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to create comment' },
+      { status: 500 }
     )
   }
 }

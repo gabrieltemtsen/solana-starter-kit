@@ -26,7 +26,6 @@ export function CommentWall() {
   const [alerts, setAlerts] = useState<Alert[]>([])
 
   const { data, loading, error, refetch } = useGetComments({
-    targetProfileId: 'social-wall',
     requestingProfileId: mainUsername,
   })
 
@@ -71,7 +70,6 @@ export function CommentWall() {
     try {
       await createComment({
         profileId: mainUsername,
-        targetProfileId: 'social-wall',
         text: commentText,
         commentId: replyingTo?.comment.id,
       })
