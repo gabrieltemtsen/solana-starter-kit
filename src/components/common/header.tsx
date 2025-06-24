@@ -95,6 +95,14 @@ export function Header() {
             </Link>
 
             <Link
+              href="/social"
+              className="flex items-center hover:opacity-80 transition-opacity"
+            >
+              <User className="h-4 w-4 mr-2" />
+              <span>Social</span>
+            </Link>
+
+            <Link
               href="/token"
               className="flex items-center hover:opacity-80 transition-opacity"
             >

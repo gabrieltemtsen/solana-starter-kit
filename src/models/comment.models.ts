@@ -17,6 +17,7 @@ interface IAuthor {
 
 interface ISocialCounts {
   likeCount: number
+  replyCount: number
 }
 
 interface IRequestingProfileSocialInfo {
@@ -29,13 +30,7 @@ export interface IComments {
   author: IAuthor
   socialCounts: ISocialCounts
   requestingProfileSocialInfo: IRequestingProfileSocialInfo
-  recentReplies: Array<{
-    comment: IComment
-    contentId: string
-    author: IAuthor
-    socialCounts: ISocialCounts
-    requestingProfileSocialInfo: IRequestingProfileSocialInfo
-  }>
+  recentReplies?: IComments[] // Array of replies
 }
 
 export interface ICommentsResponse extends IPaginatedResponse {
