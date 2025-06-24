@@ -4,6 +4,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const targetProfileId = searchParams.get('targetProfileId')
+    const contentId = searchParams.get('contentId')
     const requestingProfileId = searchParams.get('requestingProfileId')
 
     let url = `${process.env.TAPESTRY_API_URL}/comments`
@@ -11,6 +12,9 @@ export async function GET(request: NextRequest) {
 
     if (targetProfileId) {
       params.append('targetProfileId', targetProfileId)
+    }
+    if (contentId) {
+      params.append('contentId', contentId)
     }
     if (requestingProfileId) {
       params.append('requestingProfileId', requestingProfileId)
@@ -47,7 +51,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { profileId, targetProfileId, text, commentId } = body
+    const { profileId, targetProfileId, contentId, text, commentId } = body
 
     if (!profileId) {
       return NextResponse.json(
@@ -70,6 +74,10 @@ export async function POST(request: NextRequest) {
 
     if (targetProfileId) {
       payload.targetProfileId = targetProfileId
+    }
+
+    if (contentId) {
+      payload.contentId = contentId
     }
 
     if (commentId) {

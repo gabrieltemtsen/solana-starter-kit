@@ -8,6 +8,7 @@ import { useCreateComment } from '@/components/profile/hooks/use-create-comment'
 import { useCreateLike, useCreateUnlike } from '@/components/profile/hooks/use-create-like'
 import { useGetComments } from '@/components/profile/hooks/use-get-comments'
 import { IComments } from '@/models/comment.models'
+import { getOrCreateWebsiteContent, getWebsiteContentId } from '@/utils/social-wall-content'
 import { useLogin } from '@privy-io/react-auth'
 import { useEffect, useState } from 'react'
 import { CommentInput } from './comment-input'
@@ -24,8 +25,35 @@ export function CommentWall() {
   const [commentText, setCommentText] = useState('')
   const [replyingTo, setReplyingTo] = useState<IComments | null>(null)
   const [alerts, setAlerts] = useState<Alert[]>([])
+  const [contentId, setContentId] = useState<string | null>(null)
+  const [contentLoading, setContentLoading] = useState(true)
+
+  // Initialize or get the website content ID
+  useEffect(() => {
+    const initializeContent = async () => {
+      try {
+        // First check if we already have a content ID
+        let id = getWebsiteContentId()
+        
+        // If not and user is authenticated, create one
+        if (!id && mainUsername) {
+          id = await getOrCreateWebsiteContent(mainUsername)
+        }
+        
+        setContentId(id)
+      } catch (error) {
+        console.error('Failed to initialize content:', error)
+        showAlert('error', 'Failed to initialize social wall. Please refresh the page.')
+      } finally {
+        setContentLoading(false)
+      }
+    }
+
+    initializeContent()
+  }, [mainUsername])
 
   const { data, loading, error, refetch } = useGetComments({
+    contentId: contentId || undefined,
     requestingProfileId: mainUsername,
   })
 
@@ -65,13 +93,14 @@ export function CommentWall() {
   }
 
   const handleSubmitComment = async () => {
-    if (!mainUsername || !commentText.trim()) return
+    if (!mainUsername || !commentText.trim() || !contentId) return
 
     try {
       await createComment({
         profileId: mainUsername,
+        contentId: contentId,
         text: commentText,
-        commentId: replyingTo?.comment.id,
+        commentId: replyingTo?.comment.id, // Only include commentId for replies
       })
     } catch (err) {
       console.error('Failed to post comment:', err)
@@ -117,6 +146,14 @@ export function CommentWall() {
     createUnlike({ nodeId: id, startId: mainUsername })
   }
 
+  if (contentLoading) {
+    return (
+      <div className="flex justify-center">
+        <LoadCircle />
+      </div>
+    )
+  }
+
   if (error) {
     return (
       <div className="flex justify-center">
@@ -146,7 +183,7 @@ export function CommentWall() {
         <CommentInput
           commentText={commentText}
           setCommentText={setCommentText}
-          handleSubmit={mainUsername ? handleSubmitComment : handleLogin}
+          handleSubmit={mainUsername && contentId ? handleSubmitComment : handleLogin}
           loading={commentLoading}
           isAuthed={!!mainUsername}
         />

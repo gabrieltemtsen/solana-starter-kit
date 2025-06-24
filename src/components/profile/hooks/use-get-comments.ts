@@ -5,11 +5,13 @@ import { useCallback, useEffect, useState } from 'react'
 
 interface Props {
   targetProfileId?: string
+  contentId?: string
   requestingProfileId?: string
 }
 
 export const useGetComments = ({
   targetProfileId,
+  contentId,
   requestingProfileId,
 }: Props) => {
   const [data, setData] = useState<ICommentsResponse | null>(null)
@@ -26,6 +28,9 @@ export const useGetComments = ({
       
       if (targetProfileId) {
         params.append('targetProfileId', targetProfileId)
+      }
+      if (contentId) {
+        params.append('contentId', contentId)
       }
       if (requestingProfileId) {
         params.append('requestingProfileId', requestingProfileId)
@@ -52,7 +57,7 @@ export const useGetComments = ({
     } finally {
       setLoading(false)
     }
-  }, [targetProfileId, requestingProfileId])
+  }, [targetProfileId, contentId, requestingProfileId])
 
   useEffect(() => {
     fetchComments()

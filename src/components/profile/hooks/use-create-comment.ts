@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react'
 interface Props {
   profileId: string
   targetProfileId?: string
+  contentId?: string
   text: string
   commentId?: string
 }
@@ -15,7 +16,7 @@ export const useCreateComment = () => {
   const [success, setSuccess] = useState<boolean>(false)
 
   const createComment = useCallback(
-    async ({ profileId, targetProfileId, text, commentId }: Props) => {
+    async ({ profileId, targetProfileId, contentId, text, commentId }: Props) => {
       setLoading(true)
       setError(null)
       setSuccess(false)
@@ -26,7 +27,7 @@ export const useCreateComment = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ profileId, targetProfileId, text, commentId }),
+          body: JSON.stringify({ profileId, targetProfileId, contentId, text, commentId }),
         })
 
         const result = await response.json()
