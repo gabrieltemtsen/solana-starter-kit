@@ -3,7 +3,7 @@
 import { Card } from '@/components/common/card'
 import { IComments } from '@/models/comment.models'
 import { formatRelativeTime } from '@/utils/utils'
-import { MessageCircle, User } from 'lucide-react'
+import { LogIn, MessageCircle, User } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { LikeButton } from './like-button'
@@ -13,6 +13,7 @@ interface CommentListProps {
   handleLike: (id: string) => void
   handleUnlike: (id: string) => void
   onReply: (comment: IComments) => void
+  isAuthed: boolean
 }
 
 interface CommentItemProps {
@@ -21,6 +22,7 @@ interface CommentItemProps {
   handleUnlike: (id: string) => void
   onReply: (comment: IComments) => void
   isReply?: boolean
+  isAuthed: boolean
 }
 
 function CommentItem({
@@ -29,6 +31,7 @@ function CommentItem({
   handleUnlike,
   onReply,
   isReply = false,
+  isAuthed,
 }: CommentItemProps) {
   return (
     <Card className={`w-full space-y-4 ${isReply ? 'ml-8 mt-4' : ''}`}>
@@ -63,22 +66,25 @@ function CommentItem({
         {comment.requestingProfileSocialInfo && comment.socialCounts && (
           <LikeButton
             initialLikeCount={comment.socialCounts.likeCount}
-            initiallyLiked={comment?.requestingProfileSocialInfo?.hasLiked}
+            initiallyLiked={isAuthed && comment?.requestingProfileSocialInfo?.hasLiked}
             onLike={() => handleLike(comment.comment.id)}
             onUnlike={() => handleUnlike(comment.comment.id)}
+            showLoginPrompt={!isAuthed}
           />
         )}
         <button
           onClick={() => onReply(comment)}
           className="flex items-center space-x-1 text-gray-400 hover:text-gray-300"
         >
-          <MessageCircle size={16} />
+          {!isAuthed ? <LogIn size={16} /> : <MessageCircle size={16} />}
           <span className="text-sm">
-            {comment.socialCounts?.replyCount > 0
-              ? `${comment.socialCounts.replyCount} ${
-                  comment.socialCounts.replyCount === 1 ? 'Reply' : 'Replies'
-                }`
-              : 'Reply'}
+            {!isAuthed ? 'Log in to reply' : (
+              comment.socialCounts?.replyCount > 0
+                ? `${comment.socialCounts.replyCount} ${
+                    comment.socialCounts.replyCount === 1 ? 'Reply' : 'Replies'
+                  }`
+                : 'Reply'
+            )}
           </span>
         </button>
       </div>
@@ -92,13 +98,14 @@ function CommentItem({
           handleUnlike={handleUnlike}
           onReply={onReply}
           isReply
+          isAuthed={isAuthed}
         />
       ))}
     </Card>
   )
 }
 
-export function CommentList({ comments, handleLike, handleUnlike, onReply }: CommentListProps) {
+export function CommentList({ comments, handleLike, handleUnlike, onReply, isAuthed }: CommentListProps) {
   return (
     <div className="space-y-6">
       {comments.map((comment) => (
@@ -108,6 +115,7 @@ export function CommentList({ comments, handleLike, handleUnlike, onReply }: Com
           handleLike={handleLike}
           handleUnlike={handleUnlike}
           onReply={onReply}
+          isAuthed={isAuthed}
         />
       ))}
     </div>

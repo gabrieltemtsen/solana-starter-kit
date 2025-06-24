@@ -8,6 +8,7 @@ import { useCreateComment } from '@/components/profile/hooks/use-create-comment'
 import { useCreateLike, useCreateUnlike } from '@/components/profile/hooks/use-create-like'
 import { useGetComments } from '@/components/profile/hooks/use-get-comments'
 import { IComments } from '@/models/comment.models'
+import { useLogin } from '@privy-io/react-auth'
 import { useEffect, useState } from 'react'
 import { CommentInput } from './comment-input'
 import { CommentList } from './comment-list'
@@ -19,6 +20,7 @@ interface Alert {
 
 export function CommentWall() {
   const { mainUsername } = useCurrentWallet()
+  const { login } = useLogin()
   const [commentText, setCommentText] = useState('')
   const [replyingTo, setReplyingTo] = useState<IComments | null>(null)
   const [alerts, setAlerts] = useState<Alert[]>([])
@@ -80,8 +82,20 @@ export function CommentWall() {
   }
 
   const handleReply = (comment: IComments) => {
+    if (!mainUsername) {
+      handleLogin()
+      return
+    }
     setReplyingTo(comment)
     setCommentText(`@${comment.author.username} `)
+  }
+
+  const handleLogin = () => {
+    login({
+      loginMethods: ['wallet'],
+      walletChainType: 'ethereum-and-solana',
+      disableSignup: false,
+    })
   }
 
   const cancelReply = () => {
@@ -90,12 +104,18 @@ export function CommentWall() {
   }
 
   const handleLike = (id: string) => {
-    if (!mainUsername) return
+    if (!mainUsername) {
+      handleLogin()
+      return
+    }
     createLike({ nodeId: id, startId: mainUsername })
   }
 
   const handleUnlike = (id: string) => {
-    if (!mainUsername) return
+    if (!mainUsername) {
+      handleLogin()
+      return
+    }
     createUnlike({ nodeId: id, startId: mainUsername })
   }
 
@@ -128,8 +148,9 @@ export function CommentWall() {
         <CommentInput
           commentText={commentText}
           setCommentText={setCommentText}
-          handleSubmit={handleSubmitComment}
+          handleSubmit={mainUsername ? handleSubmitComment : handleLogin}
           loading={commentLoading}
+          isAuthed={!!mainUsername}
         />
       </Card>
 
@@ -147,6 +168,7 @@ export function CommentWall() {
           handleLike={handleLike}
           handleUnlike={handleUnlike}
           onReply={handleReply}
+          isAuthed={!!mainUsername}
         />
       )}
 
