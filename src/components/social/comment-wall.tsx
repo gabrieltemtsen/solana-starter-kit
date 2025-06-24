@@ -73,7 +73,8 @@ export function CommentWall() {
         text: commentText,
         commentId: replyingTo?.comment.id,
       })
-    } catch (error) {
+    } catch (err) {
+      console.error('Failed to post comment:', err)
       showAlert('error', 'Failed to post comment. Please try again.')
     }
   }
