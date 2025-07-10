@@ -1,7 +1,12 @@
 "use client";
 
-import { ParaProvider as ParaSDKProvider } from "@getpara/react-sdk";
+import { ParaProvider as ParaSDKProvider, ParaModal } from "@getpara/react-sdk";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import { API_KEY, ENVIRONMENT } from "@/config/constants";
+
+const queryClient = new QueryClient();
+
 
 export function ParaProvider({
   children,
@@ -9,18 +14,16 @@ export function ParaProvider({
   children: React.ReactNode;
 }>) {
   return (
+    <QueryClientProvider client={queryClient}>
     <ParaSDKProvider
       paraClientConfig={{
         apiKey: API_KEY,
         env: ENVIRONMENT,
       }}
-        config={{
-            disableAutoSessionKeepAlive: true,
-            paraClientOverride: undefined, // Use default Para client
-        }}
-      // paraModalConfig removed because it's not a valid prop for ParaSDKProvider
-    >
+      >
       {children}
+       <ParaModal />
     </ParaSDKProvider>
+    </QueryClientProvider>
   );
 }

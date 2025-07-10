@@ -7,7 +7,7 @@ import { useSolana } from "./useSolana";
 
 export function useParaSigner() {
   const { data: account } = useAccount();
-  const client = useClient();
+  const client: any = useClient();
   const { connection } = useSolana();
   const [signer, setSigner] = useState<ParaSolanaWeb3Signer | null>(null);
 
