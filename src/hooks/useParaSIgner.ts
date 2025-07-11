@@ -1,20 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount, useClient } from "@getpara/react-sdk";
 import { ParaSolanaWeb3Signer } from "@getpara/solana-web3.js-v1-integration";
 import { useSolana } from "./useSolana";
+import { usePara } from "@/components/provider/ParaProvider";
+import { para } from "@/config/constants";
 
 export function useParaSigner() {
-  const { data: account } = useAccount();
-  const client: any = useClient();
-  const { connection } = useSolana();
+  const { signer: contextSigner, connection, isConnected } = usePara();
+  const { connection: solanaConnection } = useSolana();
   const [signer, setSigner] = useState<ParaSolanaWeb3Signer | null>(null);
 
   useEffect(() => {
-    if (account?.isConnected && connection && client) {
+    if (isConnected && connection && solanaConnection) {
       try {
-        const newSigner = new ParaSolanaWeb3Signer(client, connection);
+        // Use the signer from ParaProvider if available, otherwise initialize a new one
+        const newSigner = contextSigner || new ParaSolanaWeb3Signer(para, solanaConnection); // Replace 'para' with actual client
         setSigner(newSigner);
       } catch (error) {
         console.error("Failed to initialize Para signer:", error);
@@ -23,10 +24,10 @@ export function useParaSigner() {
     } else {
       setSigner(null);
     }
-  }, [account?.isConnected, connection, client]);
+  }, [isConnected, connection, solanaConnection, contextSigner]);
 
   return {
     signer,
-    connection,
+    connection: solanaConnection || connection, // Prefer useSolana connection if available
   };
 }

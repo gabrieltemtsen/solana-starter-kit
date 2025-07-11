@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
 import { Button } from '@/components/common/button'
@@ -13,6 +14,7 @@ import {
   Menu,
   RefreshCw,
   User,
+  Send,
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -22,6 +24,10 @@ import { useCurrentWallet } from '../auth/hooks/use-current-wallet'
 import { useGetProfiles } from '../auth/hooks/use-get-profiles'
 import { CreateProfileContainer } from '../create-profile/create-profile-container'
 import { DialectNotificationComponent } from '../notifications/dialect-notifications-component'
+import { useAccount, useWallet, useModal, useSignTransaction } from '@getpara/react-sdk'
+import { Transaction, SystemProgram, PublicKey } from '@solana/web3.js'
+import { toast } from 'sonner'
+import { useParaSigner } from '@/hooks/useParaSIgner'
 
 export function Header() {
   const { walletAddress } = useCurrentWallet()
@@ -33,9 +39,15 @@ export function Header() {
   })
   const { ready, authenticated, logout } = usePrivy()
   const { login } = useLogin()
+  const { data: account } = useAccount()
+  const { data: wallet } = useWallet()
+  const { openModal } = useModal()
+  const { signer, connection } = useParaSigner()
+  const { signTransactionAsync } = useSignTransaction()
   const disableLogin = !ready || (ready && authenticated)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [isSendingTx, setIsSendingTx] = useState(false)
   const dropdownRef = useRef(null)
   const router = useRouter()
 
@@ -44,6 +56,57 @@ export function Header() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  const handleParaLogin = async () => {
+    try {
+      await openModal()
+    } catch (error) {
+      toast.error('Failed to open Para wallet modal')
+      console.error('Para login error:', error)
+    }
+  }
+
+  // const handleSendDemoTransaction = async () => {
+  //   if (!signer || !wallet || !connection) {
+  //     toast.error('Para wallet not connected')
+  //     return
+  //   }
+
+  //   setIsSendingTx(true)
+  //   try {
+  //     // Create a demo transaction (e.g., transfer 0.001 SOL to a dummy address)
+  //     const demoRecipient = new PublicKey('11111111111111111111111111111111') // Replace with a valid address for testing
+  //     const transaction = new Transaction().add(
+  //       SystemProgram.transfer({
+  //         fromPubkey: new PublicKey(wallet.id),
+  //         toPubkey: demoRecipient,
+  //         lamports: 1000000, // 0.001 SOL
+  //       })
+  //     )
+
+  //     // Sign and send the transaction using ParaSolanaWeb3Signer
+  //     const { signature } = await signTransactionAsync({
+  //       transactionBase64: Buffer.from(transaction.serialize({ requireAllSignatures: false })).toString('base64'),
+  //     })
+
+  //     // Confirm the transaction
+  //     const confirmation = await connection.confirmTransaction(signature, 'confirmed')
+  //     if (confirmation.value.err) {
+  //       throw new Error('Transaction failed')
+  //     }
+
+  //     toast.success(`Transaction sent: ${signature}`)
+  //   } catch (error) {
+  //     toast.error('Failed to send transaction')
+  //     console.error('Transaction error:', error)
+  //   } finally {
+  //     setIsSendingTx(false)
+  //   }
+  // }
+
+  // Determine the display address (Privy or Para)
+  const displayAddress = account?.isConnected && wallet ? wallet.id : walletAddress
+  const isParaConnected = account?.isConnected && wallet
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -78,39 +141,27 @@ export function Header() {
     <>
       <div className="border-b-1 border-muted flex items-center justify-center w-full p-3">
         <div className="max-w-6xl w-full flex items-center justify-between">
-          <Link 
-            href="/" 
-            className="hover:opacity-80"
-          >
+          <Link href="/" className="hover:opacity-80">
             <h1 className="text-2xl font-bold">Solana Starter Kit Template</h1>
           </Link>
 
           <nav className="flex items-center space-x-8">
-            <Link
-              href="/"
-              className="flex items-center hover:opacity-80 transition-opacity"
-            >
+            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
               <Home className="h-4 w-4 mr-2" />
               <span>Home</span>
             </Link>
 
-            <Link
-              href="/token"
-              className="flex items-center hover:opacity-80 transition-opacity"
-            >
+            <Link href="/token" className="flex items-center hover:opacity-80 transition-opacity">
               <Coins className="h-4 w-4 mr-2" />
               <span>Tokens</span>
             </Link>
 
-            <Link
-              href="/trade"
-              className="flex items-center hover:opacity-80 transition-opacity"
-            >
+            <Link href="/trade" className="flex items-center hover:opacity-80 transition-opacity">
               <RefreshCw className="h-4 w-4 mr-2" />
               <span>Swap</span>
             </Link>
 
-            {ready && authenticated ? (
+            {ready && (authenticated || isParaConnected) ? (
               mainUsername ? (
                 <div className="flex items-center relative" ref={dropdownRef}>
                   <div className="relative">
@@ -128,7 +179,7 @@ export function Header() {
                           <Button
                             variant="ghost"
                             className="px-4 py-2 hover:bg-muted-light w-full"
-                            onClick={() => handleCopy(walletAddress)}
+                            onClick={() => handleCopy(displayAddress || '')}
                           >
                             {copied ? (
                               <Check size={16} className="mr-2" />
@@ -136,10 +187,23 @@ export function Header() {
                               <Clipboard size={16} className="mr-2" />
                             )}
                             {abbreviateWalletAddress({
-                              address: walletAddress,
+                              address: displayAddress || '',
                             })}
                           </Button>
                         </div>
+
+                        {isParaConnected && (
+
+                          <Button
+                            variant="ghost"
+                            className="px-4 py-2 hover:bg-muted-light w-full"
+                            // onClick={handleSendDemoTransaction}
+                            disabled={isSendingTx}
+                          >
+                            <Send size={16} className="mr-2" />
+                            {isSendingTx ? 'Sending...' : 'Send Demo Tx'}
+                          </Button>
+                        )}
 
                         <Button
                           variant="ghost"
@@ -164,26 +228,37 @@ export function Header() {
                   </div>
                 </div>
               ) : (
-                <CreateProfileContainer
-                  setIsProfileCreated={setIsProfileCreated}
-                  setProfileUsername={setProfileUsername}
-                />
+                <>
+                  <CreateProfileContainer
+                    setIsProfileCreated={setIsProfileCreated}
+                    setProfileUsername={setProfileUsername}
+                  />
+                </>
               )
             ) : (
-              <Button
-                variant="ghost"
-                className='!text-green-500'
-                disabled={disableLogin}
-                onClick={() =>
-                  login({
-                    loginMethods: ['wallet'],
-                    walletChainType: 'ethereum-and-solana',
-                    disableSignup: false,
-                  })
-                }
-              >
-                <LogIn className="h-4 w-4 mr-2" /> Log in
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  className="!text-green-500"
+                  disabled={disableLogin}
+                  onClick={() =>
+                    login({
+                      loginMethods: ['wallet'],
+                      walletChainType: 'ethereum-and-solana',
+                      disableSignup: false,
+                    })
+                  }
+                >
+                  <LogIn className="h-4 w-4 mr-2" /> Privy Login
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="!text-blue-500"
+                  onClick={handleParaLogin}
+                >
+                  <LogIn className="h-4 w-4 mr-2" /> Para Login
+                </Button>
+              </div>
             )}
 
             <div className="flex items-center gap-2">

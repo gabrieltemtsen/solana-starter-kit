@@ -46,6 +46,8 @@ export function CreateProfile({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (walletAddress && username) {
+      console.log('Creating profile with:', { username, walletAddress })
+      // Call the createProfile function with the provided username and wallet address
       await createProfile({ username, walletAddress })
       setIsProfileCreated(true)
       setProfileUsername(username)
