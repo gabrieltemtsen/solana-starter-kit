@@ -24,7 +24,7 @@ import { useCurrentWallet } from '../auth/hooks/use-current-wallet'
 import { useGetProfiles } from '../auth/hooks/use-get-profiles'
 import { CreateProfileContainer } from '../create-profile/create-profile-container'
 import { DialectNotificationComponent } from '../notifications/dialect-notifications-component'
-import { useAccount, useWallet, useModal, useSignTransaction } from '@getpara/react-sdk'
+import { useAccount, useWallet, useModal, useSignTransaction, useLogout } from '@getpara/react-sdk'
 import { Transaction, SystemProgram, PublicKey } from '@solana/web3.js'
 import { toast } from 'sonner'
 import { useParaSigner } from '@/hooks/useParaSIgner'
@@ -44,6 +44,7 @@ export function Header() {
   const { openModal } = useModal()
   const { signer, connection } = useParaSigner()
   const { signTransactionAsync } = useSignTransaction()
+  const { logoutAsync } = useLogout()
   const disableLogin = !ready || (ready && authenticated)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -63,6 +64,22 @@ export function Header() {
     } catch (error) {
       toast.error('Failed to open Para wallet modal')
       console.error('Para login error:', error)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      if (isParaConnected) {
+        await logoutAsync()
+        toast.success('Successfully logged out from Para wallet')
+      }
+      if (authenticated) {
+        logout()
+        toast.success('Successfully logged out from Privy wallet')
+      }
+    } catch (error) {
+      toast.error('Failed to logout')
+      console.error('Logout error:', error)
     }
   }
   // Determine the display address (Privy or Para)
@@ -166,7 +183,7 @@ export function Header() {
                         <Button
                           variant="ghost"
                           className="px-4 py-2 hover:bg-muted-light w-full !text-red-500"
-                          onClick={logout}
+                          onClick={handleLogout}
                         >
                           <LogOut size={16} className="mr-2" /> Log Out
                         </Button>
