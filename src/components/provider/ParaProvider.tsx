@@ -126,16 +126,16 @@ export function ParaProvider({
             OAuthMethod.TWITTER,
           ]}
           onRampTestMode={true}
-          theme={{
-            mode: typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
-            font: 'inherit',
-            backgroundColor: '#FFFFFF',
-            foregroundColor: '#09090b',
-            accentColor: '#5252f2',
-            darkBackgroundColor: '#09090b',
-            darkForegroundColor: '#fafafa',
-            darkAccentColor: '#9333ea',
-          }}
+         theme={{
+    mode: typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+    font: 'inherit',
+    backgroundColor: '#000000',  // Changed to pure black
+    foregroundColor: '#ffffff',  // White text for light mode (though unlikely to be used)
+    accentColor: '#5252f2',
+    darkBackgroundColor: '#000000',  // Pure black background
+    darkForegroundColor: '#ffffff',  // Pure white text
+    darkAccentColor: '#9333ea',
+}}
           logo="/para.svg"
           recoverySecretStepEnabled={true}
           twoFactorAuthEnabled={false}
