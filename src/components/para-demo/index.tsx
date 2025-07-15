@@ -2,6 +2,8 @@
 "use client";
 
 import { usePara } from "@/components/provider/ParaProvider";
+import { para } from "@/config/constants";
+import { createTestTransaction } from "@getpara/solana-web3.js-v1-integration";
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { useState, useEffect } from "react";
 
@@ -9,7 +11,8 @@ export function ParaTransactionDemo() {
   const [message, setMessage] = useState("");
   const [toAddress, setToAddress] = useState("8Ch71Zqr1UoSj9pCfsRnaobxGvF8G6pgJ9DumsQGJ7dA");
   const [amount, setAmount] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [balance, setBalance] = useState<string | null>(null);
   const [signature, setSignature] = useState<string>("");
   const [txSignature, setTxSignature] = useState<string>("");
@@ -35,7 +38,7 @@ export function ParaTransactionDemo() {
       return;
     }
 
-    setIsLoading(true);
+    setIsSending(true);
     try {
       const balanceLamports = await connection.getBalance(signer.sender);
       setBalance((balanceLamports / LAMPORTS_PER_SOL).toFixed(4));
@@ -48,7 +51,7 @@ export function ParaTransactionDemo() {
         message: "Failed to fetch balance. Please try again.",
       });
     } finally {
-      setIsLoading(false);
+      setIsSending(false);
     }
   };
 
@@ -59,7 +62,7 @@ export function ParaTransactionDemo() {
   // Sign message
   const handleSignMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSigning(true);
     setStatus({ show: false, type: "success", message: "" });
     setSignature("");
 
@@ -69,7 +72,7 @@ export function ParaTransactionDemo() {
         type: "error",
         message: "Signer not available. Please connect your wallet.",
       });
-      setIsLoading(false);
+      setIsSigning(false);
       return;
     }
 
@@ -93,11 +96,11 @@ export function ParaTransactionDemo() {
         return;
       }
 
-      // Using signBytes if signMessage isn't available
       const messageBytes: any = new TextEncoder().encode(messageToSign);
-      const signedBytes = await signer.signBytes(messageBytes);
-      const signature = Buffer.from(signedBytes).toString("base64");
-      
+      const transaction: Transaction = await createTestTransaction(para);
+      const signedBytes = await signer.signTransaction(transaction);
+      const txSignature = (signedBytes as Transaction).signature;
+      const signature = txSignature ? txSignature.toString() : "";
       setSignature(signature);
       setStatus({
         show: true,
@@ -112,14 +115,14 @@ export function ParaTransactionDemo() {
         message: "Failed to sign message. Please try again.",
       });
     } finally {
-      setIsLoading(false);
+      setIsSigning(false);
     }
   };
 
   // Send SOL transaction
   const handleSendTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSending(true);
     setStatus({ show: false, type: "success", message: "" });
     setTxSignature("");
 
@@ -129,7 +132,7 @@ export function ParaTransactionDemo() {
         type: "error",
         message: "Signer or connection not available. Please connect your wallet.",
       });
-      setIsLoading(false);
+      setIsSending(false);
       return;
     }
 
@@ -245,41 +248,41 @@ export function ParaTransactionDemo() {
         message: error instanceof Error ? error.message : "Failed to send transaction. Please try again.",
       });
     } finally {
-      setIsLoading(false);
+      setIsSending(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-gray-900 text-white min-h-screen">
-      <h1 className="text-4xl font-bold tracking-tight mb-6 text-center text-blue-400">Para Transaction Demo</h1>
-      <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-8 text-center">
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold tracking-tight mb-6 text-center text-primary">Para Transaction Demo</h1>
+      <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8 text-center">
         Sign a message or send SOL using your Para wallet. This demo showcases message signing and SOL transfers on
         Devnet.
       </p>
 
       {/* Balance Section */}
-      <div className="max-w-xl mx-auto mb-8 bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-lg">
+      <div className="max-w-xl mx-auto mb-8 card-primary p-6 rounded-lg">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-medium text-gray-300">Current Balance:</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">Current Balance:</h3>
           <button
             onClick={fetchBalance}
-            disabled={isLoading || !address}
-            className="p-1 text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+            disabled={isSending || isSigning || !address}
+            className="p-1 text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
             title="Refresh balance"
           >
-            <span className={isLoading ? "animate-spin" : ""}>🔄</span>
+            <span className={isSending || isSigning ? "animate-spin" : ""}>🔄</span>
           </button>
         </div>
-        <p className="text-lg font-medium text-white">
+        <p className="text-lg font-medium text-foreground">
           {!address
             ? "Connect wallet to see balance"
-            : isLoading
+            : isSending || isSigning
             ? "Loading..."
             : balance
             ? `${parseFloat(balance).toFixed(4)} SOL`
             : "Unable to fetch balance"}
         </p>
-        <p className="text-sm text-gray-400 mt-1">Network: Devnet</p>
+        <p className="text-sm text-muted-foreground mt-1">Network: Devnet</p>
       </div>
 
       {/* Status Message */}
@@ -287,10 +290,10 @@ export function ParaTransactionDemo() {
         <div
           className={`max-w-xl mx-auto mb-6 p-4 rounded-lg border ${
             status.type === "success"
-              ? "bg-green-900/50 border-green-700 text-green-200"
+              ? "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-300"
               : status.type === "error"
-              ? "bg-red-900/50 border-red-700 text-red-200"
-              : "bg-blue-900/50 border-blue-700 text-blue-200"
+              ? "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-300"
+              : "bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300"
           }`}
         >
           <p className="text-sm">{status.message}</p>
@@ -298,11 +301,11 @@ export function ParaTransactionDemo() {
       )}
 
       {/* Message Signing Form */}
-      <div className="max-w-xl mx-auto mb-8 bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-lg">
-        <h2 className="text-2xl font-semibold mb-4 text-blue-400">Sign a Message</h2>
+      <div className="max-w-xl mx-auto mb-8 card-primary p-6 rounded-lg">
+        <h2 className="text-2xl font-semibold mb-4 text-primary">Sign a Message</h2>
         <form onSubmit={handleSignMessage} className="space-y-4">
           <div>
-            <label htmlFor="message" className="block text-sm font-medium mb-2 text-gray-300">
+            <label htmlFor="message" className="block text-sm font-medium mb-2 text-muted-foreground">
               Message
             </label>
             <input
@@ -312,32 +315,32 @@ export function ParaTransactionDemo() {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Enter message to sign"
               required
-              disabled={isLoading}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-600 text-white placeholder-gray-400"
+              disabled={isSending || isSigning}
+              className="w-full px-4 py-2 input-primary rounded-md"
             />
           </div>
           <button
             type="submit"
-            disabled={!message || isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md transition-colors disabled:opacity-50 text-white font-medium"
+            disabled={!message || isSigning || isSending}
+            className="w-full button-primary px-4 py-2 rounded-md"
           >
-            {isLoading ? "Signing..." : "Sign Message"}
+            {isSigning ? "Signing..." : "Sign Message"}
           </button>
         </form>
         {signature && (
-          <div className="mt-4 p-4 bg-gray-700 border border-gray-600 rounded-md">
-            <h3 className="text-sm font-medium mb-2 text-gray-300">Signature:</h3>
-            <p className="text-sm break-all bg-gray-800 p-2 rounded-md text-gray-200">{signature}</p>
+          <div className="mt-4 p-4 bg-muted/50 border border-border rounded-md">
+            <h3 className="text-sm font-medium mb-2 text-muted-foreground">Signature:</h3>
+            <p className="text-sm break-all bg-background p-2 rounded-md text-foreground">{signature}</p>
           </div>
         )}
       </div>
 
       {/* SOL Transfer Form */}
-      <div className="max-w-xl mx-auto bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-lg">
-        <h2 className="text-2xl font-semibold mb-4 text-blue-400">Send SOL</h2>
+      <div className="max-w-xl mx-auto card-primary p-6 rounded-lg">
+        <h2 className="text-2xl font-semibold mb-4 text-primary">Send SOL</h2>
         <form onSubmit={handleSendTransaction} className="space-y-4">
           <div>
-            <label htmlFor="toAddress" className="block text-sm font-medium mb-2 text-gray-300">
+            <label htmlFor="toAddress" className="block text-sm font-medium mb-2 text-muted-foreground">
               Recipient Address
             </label>
             <input
@@ -347,12 +350,12 @@ export function ParaTransactionDemo() {
               onChange={(e) => setToAddress(e.target.value)}
               placeholder="Enter recipient address"
               required
-              disabled={isLoading}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-600 text-white placeholder-gray-400"
+              disabled={isSending || isSigning}
+              className="w-full px-4 py-2 input-primary rounded-md"
             />
           </div>
           <div>
-            <label htmlFor="amount" className="block text-sm font-medium mb-2 text-gray-300">
+            <label htmlFor="amount" className="block text-sm font-medium mb-2 text-muted-foreground">
               Amount (SOL)
             </label>
             <input
@@ -364,28 +367,28 @@ export function ParaTransactionDemo() {
               step="0.01"
               min="0"
               required
-              disabled={isLoading}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-600 text-white placeholder-gray-400"
+              disabled={isSending || isSigning}
+              className="w-full px-4 py-2 input-primary rounded-md"
             />
           </div>
           <button
             type="submit"
-            disabled={!toAddress || !amount || isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md transition-colors disabled:opacity-50 text-white font-medium"
+            disabled={!toAddress || !amount || isSending || isSigning}
+            className="w-full button-primary px-4 py-2 rounded-md"
           >
-            {isLoading ? "Sending..." : "Send Transaction"}
+            {isSending ? "Sending..." : "Send Transaction"}
           </button>
         </form>
         {txSignature && (
-          <div className="mt-4 p-4 bg-gray-700 border border-gray-600 rounded-md">
-            <h3 className="text-sm font-medium mb-2 text-gray-300">Transaction Signature:</h3>
+          <div className="mt-4 p-4 bg-muted/50 border border-border rounded-md">
+            <h3 className="text-sm font-medium mb-2 text-muted-foreground">Transaction Signature:</h3>
             <a
               href={`https://solscan.io/tx/${txSignature}?cluster=devnet`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 hover:underline"
+              className="text-primary hover:text-primary/80 hover:underline"
             >
-              <p className="text-sm break-all bg-gray-800 p-2 rounded-md text-gray-200">{txSignature}</p>
+              <p className="text-sm break-all bg-background p-2 rounded-md text-foreground">{txSignature}</p>
             </a>
           </div>
         )}

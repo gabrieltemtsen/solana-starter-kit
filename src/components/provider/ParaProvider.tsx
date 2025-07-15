@@ -126,15 +126,14 @@ export function ParaProvider({
           ]}
           onRampTestMode={true}
           theme={{
-            foregroundColor: "#FFFFFF", // White text for dark mode
-            backgroundColor: "#1A1A1A", // Dark background matching app
-            accentColor: "#4D9FFF", // Blue accent matching Para Login button
-            darkForegroundColor: "#E8EBF2", // Light gray for secondary text
-            darkBackgroundColor: "#1A1F2B", // Slightly darker for depth
-            darkAccentColor: "#4D9FFF", // Consistent blue accent
-            mode: "dark", // Explicit dark mode
-            borderRadius: "md", // Medium border radius to match app
-            font: "Inter, sans-serif", // Match app’s font from layout.tsx
+            mode: typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+            font: 'inherit',
+            backgroundColor: '#FFFFFF',
+            foregroundColor: '#09090b',
+            accentColor: '#5252f2',
+            darkBackgroundColor: '#09090b',
+            darkForegroundColor: '#fafafa',
+            darkAccentColor: '#9333ea',
           }}
           logo="/para.svg"
           recoverySecretStepEnabled={true}
