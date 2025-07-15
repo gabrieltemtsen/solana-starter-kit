@@ -65,49 +65,9 @@ export function Header() {
       console.error('Para login error:', error)
     }
   }
-
-  // const handleSendDemoTransaction = async () => {
-  //   if (!signer || !wallet || !connection) {
-  //     toast.error('Para wallet not connected')
-  //     return
-  //   }
-
-  //   setIsSendingTx(true)
-  //   try {
-  //     // Create a demo transaction (e.g., transfer 0.001 SOL to a dummy address)
-  //     const demoRecipient = new PublicKey('11111111111111111111111111111111') // Replace with a valid address for testing
-  //     const transaction = new Transaction().add(
-  //       SystemProgram.transfer({
-  //         fromPubkey: new PublicKey(wallet.id),
-  //         toPubkey: demoRecipient,
-  //         lamports: 1000000, // 0.001 SOL
-  //       })
-  //     )
-
-  //     // Sign and send the transaction using ParaSolanaWeb3Signer
-  //     const { signature } = await signTransactionAsync({
-  //       transactionBase64: Buffer.from(transaction.serialize({ requireAllSignatures: false })).toString('base64'),
-  //     })
-
-  //     // Confirm the transaction
-  //     const confirmation = await connection.confirmTransaction(signature, 'confirmed')
-  //     if (confirmation.value.err) {
-  //       throw new Error('Transaction failed')
-  //     }
-
-  //     toast.success(`Transaction sent: ${signature}`)
-  //   } catch (error) {
-  //     toast.error('Failed to send transaction')
-  //     console.error('Transaction error:', error)
-  //   } finally {
-  //     setIsSendingTx(false)
-  //   }
-  // }
-
   // Determine the display address (Privy or Para)
-  const displayAddress = account?.isConnected && wallet ? wallet.id : walletAddress
+  const displayAddress = walletAddress
   const isParaConnected = account?.isConnected && wallet
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -191,19 +151,6 @@ export function Header() {
                             })}
                           </Button>
                         </div>
-
-                        {isParaConnected && (
-
-                          <Button
-                            variant="ghost"
-                            className="px-4 py-2 hover:bg-muted-light w-full"
-                            // onClick={handleSendDemoTransaction}
-                            disabled={isSendingTx}
-                          >
-                            <Send size={16} className="mr-2" />
-                            {isSendingTx ? 'Sending...' : 'Send Demo Tx'}
-                          </Button>
-                        )}
 
                         <Button
                           variant="ghost"

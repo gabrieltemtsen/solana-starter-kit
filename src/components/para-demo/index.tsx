@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 
 export function ParaTransactionDemo() {
   const [message, setMessage] = useState("");
-  const [toAddress, setToAddress] = useState("devwuNsNYACyiEYxRNqMNseBpNnGfnd4ZwNHL7sphqv"); // Default to faucet
+  const [toAddress, setToAddress] = useState("8Ch71Zqr1UoSj9pCfsRnaobxGvF8G6pgJ9DumsQGJ7dA");
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [balance, setBalance] = useState<string | null>(null);
