@@ -8,14 +8,13 @@ import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana
 import { useState, useEffect } from "react";
 
 export function ParaTransactionDemo() {
-  const [message, setMessage] = useState("");
   const [toAddress, setToAddress] = useState("8Ch71Zqr1UoSj9pCfsRnaobxGvF8G6pgJ9DumsQGJ7dA");
   const [amount, setAmount] = useState("");
   const [isSigning, setIsSigning] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [balance, setBalance] = useState<string | null>(null);
-  const [signature, setSignature] = useState<string>("");
   const [txSignature, setTxSignature] = useState<string>("");
+  const [testTxSignature, setTestTxSignature] = useState<string>(""); // Renamed from `signature`
   const [status, setStatus] = useState<{
     show: boolean;
     type: "success" | "error" | "info";
@@ -59,18 +58,18 @@ export function ParaTransactionDemo() {
     if (address) fetchBalance();
   }, [address]);
 
-  // Sign message
-  const handleSignMessage = async (e: React.FormEvent) => {
+  // Sign a test transaction
+  const handleSignTestTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSigning(true);
     setStatus({ show: false, type: "success", message: "" });
-    setSignature("");
+    setTestTxSignature("");
 
-    if (!signer) {
+    if (!signer || !connection || !signer.sender) {
       setStatus({
         show: true,
         type: "error",
-        message: "Signer not available. Please connect your wallet.",
+        message: "Signer or connection not available. Please connect your wallet.",
       });
       setIsSigning(false);
       return;
@@ -81,38 +80,39 @@ export function ParaTransactionDemo() {
         setStatus({
           show: true,
           type: "error",
-          message: "Please connect your Para wallet to sign a message.",
+          message: "Please connect your Para wallet to sign a transaction.",
         });
         return;
       }
 
-      const messageToSign = message.trim();
-      if (!messageToSign) {
-        setStatus({
-          show: true,
-          type: "error",
-          message: "Please enter a message to sign.",
-        });
-        return;
+      // Create a test transaction
+      const transaction = await createTestTransaction(para);
+      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+      transaction.feePayer = signer.sender;
+
+      // Sign the transaction
+      const signedTx = await signer.signTransaction(transaction);
+
+      // Extract the signature
+      const signature = signedTx.signatures.find((sig: any) => sig.publicKey.equals(signer.sender))?.signature;
+      if (!signature) {
+        throw new Error("Failed to extract transaction signature.");
       }
 
-      const messageBytes: any = new TextEncoder().encode(messageToSign);
-      const transaction: Transaction = await createTestTransaction(para);
-      const signedBytes = await signer.signTransaction(transaction);
-      const txSignature = (signedBytes as Transaction).signature;
-      const signature = txSignature ? txSignature.toString() : "";
-      setSignature(signature);
+      // Convert signature to base64
+      const base64Signature = Buffer.from(signature).toString("base64");
+      setTestTxSignature(base64Signature);
       setStatus({
         show: true,
         type: "success",
-        message: "Message signed successfully!",
+        message: "Test transaction signed successfully!",
       });
     } catch (error) {
-      console.error("Error signing message:", error);
+      console.error("Error signing test transaction:", error);
       setStatus({
         show: true,
         type: "error",
-        message: "Failed to sign message. Please try again.",
+        message: error instanceof Error ? error.message : "Failed to sign test transaction. Please try again.",
       });
     } finally {
       setIsSigning(false);
@@ -256,8 +256,7 @@ export function ParaTransactionDemo() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold tracking-tight mb-6 text-center text-primary">Para Transaction Demo</h1>
       <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8 text-center">
-        Sign a message or send SOL using your Para wallet. This demo showcases message signing and SOL transfers on
-        Devnet.
+        Sign a test transaction or send SOL using your Para wallet. This demo showcases transaction signing and SOL transfers on Devnet.
       </p>
 
       {/* Balance Section */}
@@ -300,37 +299,22 @@ export function ParaTransactionDemo() {
         </div>
       )}
 
-      {/* Message Signing Form */}
+      {/* Test Transaction Signing */}
       <div className="max-w-xl mx-auto mb-8 card-primary p-6 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4 text-primary">Sign a Message</h2>
-        <form onSubmit={handleSignMessage} className="space-y-4">
-          <div>
-            <label htmlFor="message" className="block text-sm font-medium mb-2 text-muted-foreground">
-              Message
-            </label>
-            <input
-              id="message"
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Enter message to sign"
-              required
-              disabled={isSending || isSigning}
-              className="w-full px-4 py-2 input-primary rounded-md"
-            />
-          </div>
+        <h2 className="text-2xl font-semibold mb-4 text-primary">Sign a Test Transaction</h2>
+        <form onSubmit={handleSignTestTransaction} className="space-y-4">
           <button
             type="submit"
-            disabled={!message || isSigning || isSending}
+            disabled={isSigning || isSending}
             className="w-full button-primary px-4 py-2 rounded-md"
           >
-            {isSigning ? "Signing..." : "Sign Message"}
+            {isSigning ? "Signing..." : "Sign Test Transaction"}
           </button>
         </form>
-        {signature && (
+        {testTxSignature && (
           <div className="mt-4 p-4 bg-muted/50 border border-border rounded-md">
-            <h3 className="text-sm font-medium mb-2 text-muted-foreground">Signature:</h3>
-            <p className="text-sm break-all bg-background p-2 rounded-md text-foreground">{signature}</p>
+            <h3 className="text-sm font-medium mb-2 text-muted-foreground">Test Transaction Signature:</h3>
+            <p className="text-sm break-all bg-background p-2 rounded-md text-foreground">{testTxSignature}</p>
           </div>
         )}
       </div>

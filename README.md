@@ -59,6 +59,18 @@ pnpm run dev
 
 Now you're all set to start coding! Begin by exploring the codebase, and use our documentation to guide your development.
 
+## Para Wallet Integration
+
+The starter kit includes a seamless integration with the [Para Wallet SDK](https://docs.getpara.de/), allowing users to connect their wallets, sign messages, and send transactions on the Solana network. The core logic is encapsulated in the `ParaProvider`, which simplifies wallet interactions and state management.
+
+### Key Features:
+
+- **Connection Management**: Easily connect to user wallets and track connection status.
+- **Signing Operations**: Sign messages and transactions securely.
+- **Balance Fetching**: Retrieve and display the user's SOL balance.
+
+This setup provides a robust foundation for building decentralized applications on Solana.
+
 ## NFT Portfolio Viewer Setup
 
 For the NFT portfolio viewer to work correctly, you need to obtain a Helius API key:
